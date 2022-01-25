@@ -6,7 +6,13 @@ import { ISetToken } from "./ISetToken.sol";
 interface IIssuanceModule {
     function issue(
         ISetToken _setToken,
-        uint256 _quantity,
+        uint _quantity,
+        address _to
+    ) external;
+
+    function redeem(
+        ISetToken _setToken,
+        uint _quantity,
         address _to
     ) external;
 }

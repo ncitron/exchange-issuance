@@ -8,15 +8,17 @@ import { ISetToken } from "../interfaces/ISetToken.sol";
 abstract contract ExchangeHelpers {
 
     enum EXCHANGE {
+        NONE,
         SUSHI,
         UNI_V2,
         UNI_V3_1,
         UNI_V3_5,
         UNI_V3_30,
-        UNI_V3_100
+        UNI_V3_100,
+        CURVE
     }
 
-    address constant weth = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+    ERC20 constant weth = ERC20(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
 
     IUniV2Router constant uniV2Router = IUniV2Router(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D);
     IUniV2Router constant sushiRouter = IUniV2Router(0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F);
@@ -122,13 +124,13 @@ abstract contract ExchangeHelpers {
     {
         if (_middle == address(0)) {
             path = new address[](2);
-            path[0] = _isBuy ? weth : _token;
-            path[1] = _isBuy ? _token : weth;
+            path[0] = _isBuy ? address(weth) : _token;
+            path[1] = _isBuy ? _token : address(weth);
         } else {
             path = new address[](3);
-            path[0] = _isBuy ? weth : _token;
+            path[0] = _isBuy ? address(weth) : _token;
             path[1] = _middle;
-            path[2] = _isBuy ? _token : weth;
+            path[2] = _isBuy ? _token : address(weth);
         }
     }
 }
