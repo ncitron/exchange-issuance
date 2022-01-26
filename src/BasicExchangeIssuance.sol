@@ -11,6 +11,8 @@ import { SetHelpers } from "./lib/SetHelpers.sol";
 contract BasicExchangeIssuance is ExchangeHelpers, SetHelpers {
     using SafeTransferLib for ERC20;
 
+    error InsufficientOutputAmount();
+
     function approveIssuanceModule(ISetToken _setToken, IIssuanceModule _issuanceModule) external {
         address[] memory components = _setToken.getComponents();
         for (uint i = 0; i < components.length; i++) {
@@ -61,7 +63,11 @@ contract BasicExchangeIssuance is ExchangeHelpers, SetHelpers {
 
     function _handleOutputs(ERC20 _outputToken, uint _minOut) internal {
         uint wethBalance = weth.balanceOf(address(this));
-        require(wethBalance >= _minOut, "slippage");
+
+        if (wethBalance < _minOut) {
+            revert InsufficientOutputAmount();
+        }
+
         _outputToken.safeTransfer(msg.sender, wethBalance);
     }
 

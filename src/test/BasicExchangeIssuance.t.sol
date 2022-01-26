@@ -19,6 +19,9 @@ contract BasicExchangeIssuanceTest is DSTest {
     ERC20 weth = ERC20(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
     IIssuanceModule basicIssuance = IIssuanceModule(0xd8EF3cACe8b4907117a45B0b125c68560532F94D);
 
+    ExchangeHelpers.EXCHANGE[] exchanges;
+    address[] intermediates;
+
     BasicExchangeIssuance exchangeIssuance;
 
     function setUp() public {
@@ -28,21 +31,22 @@ contract BasicExchangeIssuanceTest is DSTest {
         exchangeIssuance = new BasicExchangeIssuance();
         exchangeIssuance.approveIssuanceModule(ISetToken(address(bed)), basicIssuance);
         exchangeIssuance.approveSetToken(ISetToken(address(bed)));
-    }
 
-    function testIssueWeth() public {
+        weth.approve(address(exchangeIssuance), type(uint).max);
+        bed.approve(address(exchangeIssuance), type(uint).max);
 
-        ExchangeHelpers.EXCHANGE[] memory exchanges = new  ExchangeHelpers.EXCHANGE[](3);
+        exchanges = new  ExchangeHelpers.EXCHANGE[](3);
         exchanges[0] = ExchangeHelpers.EXCHANGE.UNI_V2;
         exchanges[1] = ExchangeHelpers.EXCHANGE.UNI_V2;
         exchanges[2] = ExchangeHelpers.EXCHANGE.NONE;
 
-        address[] memory intermediates = new address[](3);
+        intermediates = new address[](3);
         intermediates[0] = address(0);
         intermediates[1] = address(0);
         intermediates[2] = address(0);
+    }
 
-        weth.approve(address(exchangeIssuance), type(uint).max);
+    function testIssueWeth() public {
 
         uint initSetBalance = bed.balanceOf(address(this));
         uint initWethBalance = weth.balanceOf(address(this));
@@ -64,19 +68,19 @@ contract BasicExchangeIssuanceTest is DSTest {
         assertLt(finalWethBalance, initWethBalance);
     }
 
+    function testFailIssueWethSlippage() public {
+        exchangeIssuance.issue(
+            ISetToken(address(bed)),
+            100 ether,
+            weth,
+            1 ether,
+            basicIssuance,
+            exchanges,
+            intermediates
+        );
+    }
+
     function testRedeemWeth() public {
-
-        ExchangeHelpers.EXCHANGE[] memory exchanges = new  ExchangeHelpers.EXCHANGE[](3);
-        exchanges[0] = ExchangeHelpers.EXCHANGE.UNI_V2;
-        exchanges[1] = ExchangeHelpers.EXCHANGE.UNI_V2;
-        exchanges[2] = ExchangeHelpers.EXCHANGE.NONE;
-
-        address[] memory intermediates = new address[](3);
-        intermediates[0] = address(0);
-        intermediates[1] = address(0);
-        intermediates[2] = address(0);
-
-        bed.approve(address(exchangeIssuance), type(uint).max);
 
         uint initSetBalance = bed.balanceOf(address(this));
         uint initWethBalance = weth.balanceOf(address(this));
@@ -96,5 +100,17 @@ contract BasicExchangeIssuanceTest is DSTest {
 
         assertEq(initSetBalance - finalSetBalance, 1 ether);
         assertGt(finalWethBalance, initWethBalance);
+    }
+
+    function testFailRedeemWethSlippage() public {
+        exchangeIssuance.redeem(
+            ISetToken(address(bed)),
+            1 ether,
+            weth,
+            100 ether,
+            basicIssuance,
+            exchanges,
+            intermediates
+        );
     }
 }
